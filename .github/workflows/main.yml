@@ -15,6 +15,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Get latest version
+        id: get-latest-version
+        run: |
+          latest_version=$(curl -s https://api.github.com/repos/dushixiang/next-terminal/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")')
+          echo "::set-output name=version::$latest_version"
+
+      - name: Check if version has changed
+        id: check-version
+        run: |
+          current_version=$(cat version)
+          latest_version=${{ steps.get-latest-version.outputs.version }}
+          if [[ "$current_version" == "$latest_version" ]]; then
+            echo "No changes in version. Skipping build."
+            exit 0
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -24,7 +40,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -32,5 +47,10 @@ jobs:
           platforms: linux/arm64,linux/arm/v7,linux/amd64
           push: true
           tags: |
-           ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:latest
-            
+            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}-$(date +'%Y%m%d%H%M%S')
+
+      - name: Update version file
+        run: echo ${{ steps.get-latest-version.outputs.version }} > version
+        if: steps.check-version.outputs.result == 'success'
