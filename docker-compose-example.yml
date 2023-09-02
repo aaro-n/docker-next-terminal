@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  nginx-extras:
+    image: aaronlee/next-terminal:latest
+    restart: always
+    container_name: next-terminal
+    volumes:
+      ./data:/usr/local/next-terminal/data
+    ports:
+      - 8088:8088
