@@ -31,23 +31,26 @@ jobs:
           CURRENT_VERSION=$(cat version)
           if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
             echo "Versions match. Skipping build."
-            exit 1
+            echo "::set-output name=skip_build::true"
           else
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
       - name: Build and push Docker image (latest)
+        if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           docker build -t aaronlee/next-terminal:latest .
           docker push aaronlee/next-terminal:latest
 
       - name: Build and push Docker image (versioned)
+        if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           docker build -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} .
           docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}
 
       - name: Build and push Docker image (versioned with timestamp)
+        if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -55,6 +58,7 @@ jobs:
           docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP}
 
       - name: Update version file and push to GitHub
+        if: steps.fetch-version.outputs.skip_build != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
