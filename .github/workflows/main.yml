@@ -8,54 +8,46 @@ on:
     - cron: "33 3 26 * *"
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Get latest version
-        id: get-latest-version
-        run: |
-          latest_version=$(curl -s https://api.github.com/repos/dushixiang/next-terminal/releases/latest | grep -oP '"tag_name": "\K(.*?)(?=")')
-          echo "::set-output name=version::$latest_version"
+      - name: Set up Docker
+        uses: docker/setup-docker@v1
 
-      - name: Check if version has changed
-        id: check-version
+      - name: Fetch latest version
+        id: fetch-version
         run: |
-          current_version=$(cat version)
-          latest_version=${{ steps.get-latest-version.outputs.version }}
-          if [[ "$current_version" == "$latest_version" ]]; then
-            echo "No changes in version. Skipping build."
-            exit 0
+          LATEST_VERSION=$(curl -s https://api.github.com/repos/dushixiang/next-terminal/releases/latest | jq -r '.tag_name')
+          CURRENT_VERSION=$(cat version)
+          if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "Versions match. Skipping build."
+            exit 1
+          else
+            echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          platforms: linux/arm64,linux/arm/v7,linux/amd64
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}-${{ format(github.run_number, 'yyyyMMddHHmmss') }}
-
-      - name: Update version file
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          echo "${{ steps.get-latest-version.outputs.version }}" > version
-          git config --global user.name "Your Name"
-          git config --global user.email "youremail@example.com"
+          docker build -t aaronlee/next-terminal:latest .
+          docker login -u $DOCKER_USERNAME -p $DOCKERHUB_TOKEN
+          docker push aaronlee/next-terminal:latest
+
+      - name: Update version file and push to GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
+          echo $LATEST_VERSION > version
+          git config user.email "your-email@example.com"
+          git config user.name "Your Name"
           git add version
-          git commit -m "Update version file"
-          git push
-        if: steps.check-version.outputs.result == 'success'
+          git commit -m "Update version to $LATEST_VERSION"
+          git push origin master
+
