@@ -49,7 +49,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}-$(date +'%Y%m%d%H%M%S')
+            ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}-${{ github.run_number }}
 
       - name: Update version file
         run: echo ${{ steps.get-latest-version.outputs.version }} > version
