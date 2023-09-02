@@ -39,23 +39,20 @@ jobs:
       - name: Build and push Docker image (latest)
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest .
-          docker push aaronlee/next-terminal:latest
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest --push .
 
       - name: Build and push Docker image (versioned)
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} .
-          docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} --push .
 
       - name: Build and push Docker image (versioned with timestamp)
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} .
-          docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP}
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
 
       - name: Update version file and push to GitHub
         if: steps.fetch-version.outputs.skip_build != 'true'
@@ -69,4 +66,3 @@ jobs:
           git add version
           git commit -m "Update version to $LATEST_VERSION"
           git push origin main
-
