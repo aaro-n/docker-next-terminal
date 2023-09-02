@@ -52,11 +52,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/next-terminal:${{ steps.get-latest-version.outputs.version }}-${{ format(github.run_number, 'yyyyMMddHHmmss') }}
 
       - name: Update version file
-        run: |
-          echo "${{ steps.get-latest-version.outputs.version }}" > version
-          git config --global user.name "Your Name"
-          git config --global user.email "youremail@example.com"
-          git add version
-          git commit -m "Update version file"
-          git push
+        uses: actions/create-file@v2
+        with:
+          path: version
+          content: ${{ steps.get-latest-version.outputs.version }}
         if: steps.check-version.outputs.result == 'success'
