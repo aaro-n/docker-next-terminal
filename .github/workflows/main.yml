@@ -36,10 +36,23 @@ jobs:
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (latest)
         run: |
           docker build -t aaronlee/next-terminal:latest .
           docker push aaronlee/next-terminal:latest
+
+      - name: Build and push Docker image (versioned)
+        run: |
+          LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
+          docker build -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} .
+          docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}
+
+      - name: Build and push Docker image (versioned with timestamp)
+        run: |
+          LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          docker build -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} .
+          docker push aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP}
 
       - name: Update version file and push to GitHub
         env:
@@ -52,4 +65,3 @@ jobs:
           git add version
           git commit -m "Update version to $LATEST_VERSION"
           git push origin main
-
