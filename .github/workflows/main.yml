@@ -61,8 +61,8 @@ jobs:
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           echo $LATEST_VERSION > version
-          git config user.email "your-email@example.com"
-          git config user.name "Your Name"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
           git add version
           git commit -m "Update version to $LATEST_VERSION"
           git push origin main
