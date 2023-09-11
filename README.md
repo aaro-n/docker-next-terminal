@@ -37,6 +37,7 @@ fly.toml中端口配置
     restart_limit = 0
 ```
 **2023.09.11** 新增两个变量`HOSTS_CONFIG`和`SSH_AUTHORIZED_KEYS`，内容都经过base64编码后得到的。
+
 `HOSTS_CONFIG`转码前例子
 ```
 # Next Terminal运行服务
