@@ -35,11 +35,11 @@
 # 第三次修正，用于显示日志
  COPY config/logrotate.conf  /etc/logrotate.d/logrotate.conf
 # 增加通过bash64解码方式添加hosts和SSH证书
- COPY config/satrt-config.sh /var/satrt-config.sh
+ COPY config/start-config.sh /var/start-config.sh
  
 # 为启动脚本设置运行权限并切将时间设置为北京时间
  RUN chmod +x /var/docker-entrypoint.sh && \
-     chmod +x /var/satrt-config.sh && \
+     chmod +x /var/start-config.sh && \
      cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
      echo 'Asia/Shanghai' > /etc/timezone
 
