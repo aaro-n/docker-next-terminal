@@ -20,14 +20,14 @@
  COPY --from=builder1 /usr/local/next-terminal /usr/local/next-terminal
 
 # 安装supervisord，这部分我折腾好久
-#第二次修正，安装tzdata ，用于将VPS强制设置为北京时间
+# 第二次修正，安装tzdata ，用于将VPS强制设置为北京时间
 # 第三次修正，用于显示日志
- RUN apk update && \ 
-     apk --no-cache add \
+ RUN apt-get update && \
+     apt-get install -y \
      logrotate \
      tzdata \
      supervisor && \
-     rm -rf /var/cache/apk/*
+     rm -rf /var/lib/apt/lists/*
 
 # 将supervisord配置文件复制到容器
  COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
