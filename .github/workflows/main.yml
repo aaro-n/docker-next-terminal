@@ -1,4 +1,4 @@
-name: Docker Build and Publish
+name: Docker 构建和发布
 
 on:
   push:
@@ -12,49 +12,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 检出仓库
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
+      - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Log in to Docker Hub
+      - name: 登录到 Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Fetch latest version
+      - name: 获取最新版本
         id: fetch-version
         run: |
           LATEST_VERSION=$(curl -s https://api.github.com/repos/dushixiang/next-terminal/releases/latest | jq -r '.tag_name')
           CURRENT_VERSION=$(cat version)
           if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
-            echo "Versions match. Skipping build."
+            echo "版本匹配，跳过构建。"
             echo "::set-output name=skip_build::true"
           else
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
-      - name: Build and push Docker image (latest)
+      - name: 构建并推送 Docker 镜像（latest）
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest --push .
 
-      - name: Build and push Docker image (versioned)
+      - name: 构建并推送 Docker 镜像（带版本号）
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} --push .
 
-      - name: Build and push Docker image (versioned with timestamp)
+      - name: 构建并推送 Docker 镜像（带版本号和时间戳）
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
 
-      - name: Update version file and push to GitHub
+      - name: 更新版本文件并推送到 GitHub
         if: steps.fetch-version.outputs.skip_build != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,7 +64,7 @@ jobs:
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
           git add version
-          git commit -m "Update version to $LATEST_VERSION"
+          git commit -m "将版本更新为 $LATEST_VERSION"
           git push origin main
 
       - name: 写入时间到文件
@@ -76,4 +76,4 @@ jobs:
           git config --global user.email "actions@github.com"
           git add time
           git commit -m "更新时间文件"
-          git push
+          git push origin main
