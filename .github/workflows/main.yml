@@ -66,3 +66,14 @@ jobs:
           git add version
           git commit -m "Update version to $LATEST_VERSION"
           git push origin main
+
+            - name: 写入时间到文件
+        run: echo $(date +"%Y-%m-%d %H:%M:%S") > time
+
+      - name: 提交和推送时间更改
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add time
+          git commit -m "更新时间文件"
+          git push
