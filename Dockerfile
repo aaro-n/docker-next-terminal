@@ -23,7 +23,7 @@
 # 第二次修正，安装tzdata ，用于将VPS强制设置为北京时间
 # 第三次修正，用于显示日志
  RUN apt-get update && \
-     apt-get install -y \
+     apt-get install -y --no-install-recommends \
      logrotate \
      tzdata \
      supervisor && \
