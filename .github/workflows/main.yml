@@ -43,7 +43,17 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest -t aaronlee/next-terminal:${LATEST_VERSION} -t aaronlee/next-terminal:${LATEST_VERSION}-${TIMESTAMP} --push .
 
-      - name: 更新版本文件并推送到 GitHub
+
+      - name: 推送 Docker 镜像标签
+        if: steps.fetch-version.outputs.skip_build != 'true'
+        run: |
+          LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          docker push aaronlee/next-terminal:latest
+          docker push aaronlee/next-terminal:${LATEST_VERSION}
+          docker push aaronlee/next-terminal:${LATEST_VERSION}-${TIMESTAMP}
+ 
+     - name: 更新版本文件并推送到 GitHub
         if: steps.fetch-version.outputs.skip_build != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
