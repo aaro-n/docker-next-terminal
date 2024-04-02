@@ -36,14 +36,12 @@ jobs:
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
-      - name: 构建并推送 Docker 镜像（latest、带版本号、带版本号和时间戳）
+      - name: 构建并推送 Docker 镜像（latest、带版本号和带版本号和时间戳）
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest --push .
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} --push .
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest -t aaronlee/next-terminal:${LATEST_VERSION} -t aaronlee/next-terminal:${LATEST_VERSION}-${TIMESTAMP} --push .
 
       - name: 更新版本文件并推送到 GitHub
         if: steps.fetch-version.outputs.skip_build != 'true'
