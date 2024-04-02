@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 检出代码库
+      - name: 检出仓库
         uses: actions/checkout@v2
 
       - name: 设置 Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: 登录 Docker Hub
+      - name: 登录到 Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -36,15 +36,14 @@ jobs:
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
-      - name: 构建并推送 Docker 镜像（latest、带版本号和带版本号和时间戳）
+      - name: 构建并推送 Docker 镜像（latest、带版本号、带版本号和时间戳）
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest -t aaronlee/next-terminal:${LATEST_VERSION} -t aaronlee/next-terminal:${LATEST_VERSION}-${TIMESTAMP} --push .
-          docker push aaronlee/next-terminal:latest
-          docker push aaronlee/next-terminal:${LATEST_VERSION}
-          docker push aaronlee/next-terminal:${LATEST_VERSION}-${TIMESTAMP}
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:latest --push .
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} --push .
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
 
       - name: 更新版本文件并推送到 GitHub
         if: steps.fetch-version.outputs.skip_build != 'true'
@@ -63,7 +62,7 @@ jobs:
       - name: 写入时间到文件
         run: echo $(date +"%Y-%m-%d %H:%M:%S") > time
 
-      - name: 提交并推送时间更改
+      - name: 提交和推送时间更改
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
@@ -71,4 +70,3 @@ jobs:
           current_time=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M:%S")
           git commit -m "运行时间 - 北京时间: $current_time"
           git push origin main
-
