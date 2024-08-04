@@ -22,12 +22,7 @@
 # 安装supervisord，这部分我折腾好久
 # 第二次修正，安装tzdata ，用于将VPS强制设置为北京时间
 # 第三次修正，用于显示日志
- RUN apt-get update && \
-     apt-get install -y --no-install-recommends \
-     logrotate \
-     tzdata \
-     supervisor && \
-     rm -rf /var/lib/apt/lists/*
+ RUN apk add --no-cache logrotate tzdata supervisor
 
 # 将supervisord配置文件复制到容器
  COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
