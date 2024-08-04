@@ -13,7 +13,7 @@
  ENV SSHD_PORT 8089
  ENV SSHD_ADDR 0.0.0.0:$SSHD_PORT
  ENV TIME_ZONE=Asia/Shanghai
- ENV GUACD_HOSTNAME 127.0.0.1
+# ENV GUACD_HOSTNAME 127.0.0.1
  ENV GUACD_PORT 4822
 
 # 将从`dushixiang/next-terminal:latest`提取的二进制文件复制到`dushixiang/guacd:latest`中
