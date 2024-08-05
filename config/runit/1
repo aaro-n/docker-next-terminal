@@ -1,0 +1,19 @@
+#!/bin/sh
+# 这个脚本用于启动服务
+
+# 捕获 SIGTERM 和 SIGINT 信号
+cleanup() {
+    echo "Stopping..."
+    kill -TERM "$PID"
+    wait "$PID"
+    echo "服务已停止."
+}
+
+trap cleanup SIGTERM SIGINT
+
+# 启动服务
+exec runsvdir /etc/service &  # 在后台启动服务
+PID=$!  # 保存 runsvdir 的 PID
+
+# 等待进程退出
+wait "$PID"

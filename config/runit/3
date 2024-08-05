@@ -1,0 +1,18 @@
+#!/bin/sh
+
+cleanup() {
+    echo "停止服务..."
+    if [ -n "$PID" ]; then
+        kill -TERM "$PID" || true
+        # 不等待进程结束，立即退出
+    fi
+    echo "服务已停止."
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
+
+echo "运行阶段 3"
+
+# 等待 runit 1 启动的进程
+wait "$PID"
