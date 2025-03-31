@@ -1,5 +1,6 @@
 database:
-  enabled: true
+  #
+  #aaaa  enabled: true
   type: mysql
   mysql:
     hostname: mysql
