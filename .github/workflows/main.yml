@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "13 3 24 * *"
+    - cron: "13 3 * * *"
 
 jobs:
   build:
@@ -36,8 +36,31 @@ jobs:
             echo "::set-output name=latest_version::$LATEST_VERSION"
           fi
 
+      - name: 比较配置文件
+        id: compare-config
+        run: |
+          CONFIG_FILES=("sql/config-mysql.yaml" "sql/config-postgres.yaml" "sql/config-sqlite.yaml")
+          REMOTE_URLS=("https://f.typesafe.cn/next-terminal/config-mysql.yaml" "https://f.typesafe.cn/next-terminal/config-postgres.yaml" "https://f.typesafe.cn/next-terminal/config-sqlite.yaml")
+          SKIP_BUILD=false
+
+          for i in "${!CONFIG_FILES[@]}"; do
+            LOCAL_FILE=${CONFIG_FILES[$i]}
+            REMOTE_FILE=$(curl -s ${REMOTE_URLS[$i]})
+            LOCAL_CONTENT=$(cat $LOCAL_FILE)
+
+            if [ "$LOCAL_CONTENT" != "$REMOTE_FILE" ]; then
+              echo "配置文件 ${LOCAL_FILE} 与远程文件不匹配，跳过构建。"
+              SKIP_BUILD=true
+              break
+            fi
+          done
+
+          if [ "$SKIP_BUILD" = true ]; then
+            echo "::set-output name=skip_build::true"
+          fi
+
       - name: 构建并推送 Docker 镜像（latest、带版本号、带版本号和时间戳）
-        if: steps.fetch-version.outputs.skip_build != 'true'
+        if: steps.fetch-version.outputs.skip_build != 'true' && steps.compare-config.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -46,7 +69,7 @@ jobs:
           docker buildx build --platform linux/amd64,linux/arm64 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
 
       - name: 更新版本文件并推送到 GitHub
-        if: steps.fetch-version.outputs.skip_build != 'true'
+        if: steps.fetch-version.outputs.skip_build != 'true' && steps.compare-config.outputs.skip_build != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -70,3 +93,4 @@ jobs:
           current_time=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M:%S")
           git commit -m "运行时间 - 北京时间: $current_time"
           git push origin main
+

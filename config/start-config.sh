@@ -1,14 +1,37 @@
 #!/usr/bin/env sh
 
-# 解密HOSTS_CONFIG并写入/etc/hosts文件
-echo "$HOSTS_CONFIG" | base64 -d >> /etc/hosts
+# 临时文件路径
+TEMP_FILE="/tmp/start-config.tmp"
 
-# 创建文件夹 
-mkdir -p /root/.ssh
+# 检查临时文件是否存在
+if [ -f "$TEMP_FILE" ]; then
+    exit 0
+fi
 
-# 解密SSH_AUTHORIZED_KEYS并写入/root/.ssh/id_rsa文件
-echo "$SSH_AUTHORIZED_KEYS" | base64 -d >> /root/.ssh/id_rsa
+# 创建临时文件，表示配置将要生成
+touch "$TEMP_FILE"
+if [ $? -ne 0 ]; then
+    exit 1
+fi
 
-# 设置权限
-chmod 700 /root/.ssh
-chmod 600 /root/.ssh/id_rsa
+# 检查环境变量 HOSTS_CONFIG 是否存在
+if [ -n "$HOSTS_CONFIG" ]; then
+    # 将 HOSTS_CONFIG 拆分成行并替换换行符为分号
+    HOSTS_CONFIG=$(echo "$HOSTS_CONFIG" | tr '\n' ';')
+
+    # 清空 /etc/hosts 中的旧条目（可选）
+    # cp /etc/hosts /etc/hosts.bak
+    # echo "127.0.0.1 localhost" > /etc/hosts
+
+    # 添加新条目
+    echo "$HOSTS_CONFIG" | tr ';' '\n' | while IFS= read -r HOST_ENTRY; do
+        echo "$HOST_ENTRY" >> /etc/hosts
+    done
+fi
+
+# 追加 guacd 条目
+echo "127.0.0.1 guacd" >> /etc/hosts
+
+echo "已配置HOSTS"
+
+exit 0
