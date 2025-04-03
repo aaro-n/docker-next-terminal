@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM dushixiang/next-terminal-premium:latest AS builder1
+FROM dushixiang/next-terminal:latest AS builder1
 FROM dushixiang/guacd:latest
 
 COPY --from=builder1 /usr/local/next-terminal /usr/local/next-terminal
