@@ -17,9 +17,8 @@ COPY config/start-run /var/run
 
 # 设置脚本权限
 RUN chmod -R +x /etc/s6 && \
-    chmod -R 755 /etc/s6  && \
-    chmod -R +x /var/run && \ 
-    chmod -R 755 /var/run  && \
+    chmod -R 755 /etc/s6  && \ 
+    chmod +x /var/run/*.sh  && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone
 
