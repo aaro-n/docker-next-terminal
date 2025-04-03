@@ -1,3 +1,0 @@
-#!/bin/sh
-# 这个脚本用于服务运行时的操作
-echo "Running stage 2"

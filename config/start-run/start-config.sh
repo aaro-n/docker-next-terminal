@@ -29,6 +29,13 @@ if [ -n "$HOSTS_CONFIG" ]; then
     done
 fi
 
+# 检查特定文件是否存在
+SPECIFIC_FILE="/usr/local/next-terminal/hosts"  # 替换为您的特定文件路径
+if [ -f "$SPECIFIC_FILE" ]; then
+    # 将特定文件的内容复制到 /etc/hosts
+    cat "$SPECIFIC_FILE" >> /etc/hosts
+fi
+
 # 追加 guacd 条目
 echo "127.0.0.1 guacd" >> /etc/hosts
 
