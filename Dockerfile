@@ -20,7 +20,8 @@ RUN chmod -R +x /etc/s6 && \
     chmod -R 755 /etc/s6  && \ 
     chmod +x /var/run/*.sh  && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo 'Asia/Shanghai' > /etc/timezone
+    echo 'Asia/Shanghai' > /etc/timezone  && \
+    chmod -R 555 /usr/local/next-terminal/next-terminal
 
 # 设置 s6 作为入口点
 CMD ["s6-svscan", "/etc/s6"]
