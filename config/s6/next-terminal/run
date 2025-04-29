@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/local/next-terminal/next-terminal
+cd /usr/local/next-terminal/ && exec /usr/local/next-terminal/next-terminal -c /etc/next-terminal/config.yaml

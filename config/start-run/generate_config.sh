@@ -16,7 +16,6 @@ touch "$TEMP_FILE"
 
 # 检查配置文件是否已存在
 if [ -f "$CONFIG_FILE" ]; then
-    # 如果配置文件存在，直接输出消息并退出
     echo "配置文件已存在: $CONFIG_FILE"
     exit 0
 fi
@@ -28,7 +27,7 @@ APP_DATABASE_TYPE="${APP_DATABASE_TYPE:-sqlite}"
 get_env() {
   var_name="$1"
   default_value="$2"
-  eval value=\$"$var_name"  # 使用双引号确保变量名的正确解析
+  eval value=\$"$var_name"
   echo "${value:-$default_value}"
 }
 
@@ -44,7 +43,7 @@ EOF
     mysql)
       cat <<EOF
   mysql:
-    hostname: $(get_env "APP_DATABASE_MYSQL_HOSTNAME" "mysql")
+    hostname: $(get_env "APP_DATABASE_MYSQL_HOSTNAME" "localhost")
     port: $(get_env "APP_DATABASE_MYSQL_PORT" "3306")
     username: $(get_env "APP_DATABASE_MYSQL_USERNAME" "next-terminal")
     password: $(get_env "APP_DATABASE_MYSQL_PASSWORD" "next-terminal")
@@ -54,7 +53,7 @@ EOF
     postgres)
       cat <<EOF
   postgres:
-    hostname: $(get_env "APP_DATABASE_POSTGRES_HOSTNAME" "postgresql")
+    hostname: $(get_env "APP_DATABASE_POSTGRES_HOSTNAME" "localhost")
     port: $(get_env "APP_DATABASE_POSTGRES_PORT" "5432")
     username: $(get_env "APP_DATABASE_POSTGRES_USERNAME" "next-terminal")
     password: $(get_env "APP_DATABASE_POSTGRES_PASSWORD" "next-terminal")
@@ -74,29 +73,32 @@ database:
   enabled: $(get_env "APP_DATABASE_ENABLED" "true")
   type: $APP_DATABASE_TYPE
 $(generate_database_config)
+  ShowSql: false
 
 log:
   level: $(get_env "APP_LOG_LEVEL" "debug")
-  filename: $(get_env "APP_LOG_FILENAME" "./logs/nt.log")
+  filename: $(get_env "APP_LOG_FILENAME" "/usr/local/next-terminal/data/logs/nt.log")
 
 server:
   addr: "$(get_env "APP_SERVER_ADDR" "0.0.0.0:8088")"
   tls:
     enabled: $(get_env "APP_SERVER_TLS_ENABLED" "false")
     auto: $(get_env "APP_SERVER_TLS_AUTO" "false")
-    cert: $(get_env "APP_SERVER_TLS_CERT" "")
-    key: $(get_env "APP_SERVER_TLS_KEY" "")
+    cert: $(get_env "APP_SERVER_TLS_CERT" "/usr/local/next-terminal//data/cert/localhost.pem")
+    key: $(get_env "APP_SERVER_TLS_KEY" "/usr/local/next-terminal/data/cert/localhost-key.pem")
 
 app:
-  rpc:
-    addr: $(get_env "APP_APP_RPC_ADDR" "0.0.0.0:8099")
-    tls: 
-      enabled: $(get_env "APP_APP_RPC_TLS_ENABLED" "true")
-      cert: $(get_env "APP_APP_RPC_TLS_CERT" "")
-      key: $(get_env "APP_APP_RPC_TLS_KEY" "")
+  website:
+    accessLog: "/usr/local/next-terminal/data/logs/access.log"
   recording:
     type: $(get_env "APP_APP_RECORDING_TYPE" "local")
     path: $(get_env "APP_APP_RECORDING_PATH" "/usr/local/next-terminal/data/recordings")
+  s3:
+    endpoint: "$(get_env "APP_S3_ENDPOINT" "127.0.0.1:9000")"
+    accessKeyId: "$(get_env "APP_S3_ACCESS_KEY_ID" "minioadmin")"
+    secretAccessKey: "$(get_env "APP_S3_SECRET_ACCESS_KEY" "miniopassword")"
+    bucket: "$(get_env "APP_S3_BUCKET" "recording")"
+    useSSL: $(get_env "APP_S3_USE_SSL" "false")
   guacd:
     drive: $(get_env "APP_APP_GUACD_DRIVE" "/usr/local/next-terminal/data/drive")
     hosts:
