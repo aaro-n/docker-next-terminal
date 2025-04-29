@@ -20,12 +20,6 @@ server:
     key: ""
 
 app:
-  rpc:
-    addr: 0.0.0.0:8099
-    tls: 
-      enabled: true
-      cert: ""
-      key: ""
   recording:
     type: "local"
     path: "/usr/local/next-terminal/data/recordings"
