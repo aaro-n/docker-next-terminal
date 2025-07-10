@@ -1,0 +1,11 @@
+services:
+  next-terminal:
+    build:
+      context: .
+      dockerfile: Dockerfile    
+    restart: always
+    container_name: docker-next-terminal
+    volumes:
+      - ./data:/usr/local/next-terminal/data
+    ports:
+      - 8088:8088
