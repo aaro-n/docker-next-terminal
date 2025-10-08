@@ -29,3 +29,17 @@ app:
       - hostname: guacd
         port: 4822
         weight: 1
+  # 反向代理配置，详情参考 https://docs.next-terminal.typesafe.cn/install/config-desc.html
+  ReverseProxy: 
+    Enabled: false # 是否启用反向代理
+    HttpEnabled: true # 是否启用 http 反向代理
+    HttpAddr: ":80" # http 监听地址
+    HttpRedirectToHttps: false  # 是否强制 http 访问转为 https
+    HttpsEnabled: true # 是否启用 https 反向代理
+    HttpsAddr: ":443" # https 监听地址
+    SelfProxyEnabled: true # 是否启用自代理
+    SelfDomain: "nt.yourdomain.com" # 自代理域名，SelfProxyEnabled 为 true 时生效
+    Root: "" # 系统根路径，SelfProxyEnabled 为 flase 时生效。示例：https://nt.yourdomain.com
+    IpExtractor: "direct" # ip 提取方式，可选 direct, x-forwarded-for, x-real-ip
+    IpTrustList: # 信任的IP地址列表
+      - "0.0.0.0/0"
