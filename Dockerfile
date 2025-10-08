@@ -3,6 +3,9 @@
 FROM dushixiang/next-terminal:latest AS builder1
 FROM dushixiang/guacd:latest
 
+# 添加在容器中运行的标识
+ENV NT_IN_CONTAINER=true
+
 COPY --from=builder1 /usr/local/next-terminal /usr/local/next-terminal
 
 
