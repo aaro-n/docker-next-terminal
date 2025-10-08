@@ -105,6 +105,20 @@ app:
       - hostname: $(get_env "APP_APP_GUACD_HOSTS_HOSTNAME" "guacd")
         port: $(get_env "APP_APP_GUACD_HOSTS_PORT" "4822")
         weight: $(get_env "APP_APP_GUACD_HOSTS_WEIGHT" "1")
+
+  ReverseProxy:
+    Enabled: $(get_env "APP_REVERSE_PROXY_ENABLED" "false")
+    HttpEnabled: $(get_env "APP_REVERSE_PROXY_HTTP_ENABLED" "true")
+    HttpAddr: "$(get_env "APP_REVERSE_PROXY_HTTP_ADDR" ":80")"
+    HttpRedirectToHttps: $(get_env "APP_REVERSE_PROXY_HTTP_REDIRECT" "false")
+    HttpsEnabled: $(get_env "APP_REVERSE_PROXY_HTTPS_ENABLED" "true")
+    HttpsAddr: "$(get_env "APP_REVERSE_PROXY_HTTPS_ADDR" ":443")"
+    SelfProxyEnabled: $(get_env "APP_REVERSE_PROXY_SELF_ENABLED" "true")
+    SelfDomain: "$(get_env "APP_REVERSE_PROXY_SELF_DOMAIN" "nt.yourdomain.com")"
+    Root: "$(get_env "APP_REVERSE_PROXY_ROOT" "")"
+    IpExtractor: "$(get_env "APP_REVERSE_PROXY_IP_EXTRACTOR" "direct")"
+    IpTrustList:
+      - "$(get_env "APP_REVERSE_PROXY_IP_TRUST_LIST" "0.0.0.0/0")"
 EOF
 } > "$CONFIG_FILE"
 
