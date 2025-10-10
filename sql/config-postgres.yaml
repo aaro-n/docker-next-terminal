@@ -13,11 +13,6 @@ log:
 
 server:
   addr: "0.0.0.0:8088"
-  tls:
-    enabled: false
-    auto: false
-    cert: ""
-    key: ""
 
 app:
   recording:
@@ -43,3 +38,5 @@ app:
     IpExtractor: "direct" # ip 提取方式，可选 direct, x-forwarded-for, x-real-ip
     IpTrustList: # 信任的IP地址列表
       - "0.0.0.0/0"
+  Website:
+    AccessLog: "./logs/access.log"
