@@ -39,8 +39,8 @@ jobs:
       - name: 比较配置文件
         id: compare-config
         run: |
-          CONFIG_FILES=("sql/config-postgres.yaml")
-          REMOTE_URLS=("https://f.typesafe.cn/next-terminal/config-postgres.yaml")
+          CONFIG_FILES=("sql/config.yaml")
+          REMOTE_URLS=("https://f.typesafe.cn/next-terminal/config.yaml")
           SKIP_BUILD=false
 
           for i in "${!CONFIG_FILES[@]}"; do

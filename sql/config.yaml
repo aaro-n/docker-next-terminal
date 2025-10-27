@@ -1,31 +1,34 @@
-database:
-  enabled: true
-  type: postgres
-  postgres:
-    hostname: postgresql
-    port: 5432
-    username: next-terminal
-    password: next-terminal
-    database: next-terminal
+Database:
+  Enabled: true
+  Type: postgres
+  Postgres:
+    Hostname: postgresql
+    Port: 5432
+    Username: next-terminal
+    Password: next-terminal
+    Database: next-terminal
+  ShowSql: false
 log:
-  level: debug
-  filename: ./logs/nt.log
+  Level: debug # 日志等级  debug,info,waring,error
+  Filename: ./logs/nt.log
 
-server:
-  addr: "0.0.0.0:8088"
+Server:
+  Addr: "0.0.0.0:8088"
 
-app:
-  recording:
-    type: "local"
-    path: "/usr/local/next-terminal/data/recordings"
-  guacd:
-    drive: "/usr/local/next-terminal/data/drive"
-    hosts:
-      - hostname: guacd
-        port: 4822
-        weight: 1
+App:
+  Website:
+    AccessLog: "./logs/access.log" # web 资产的访问日志路径
+  Recording:
+    Type: "local" # 录屏文件存储位置，可选 local, s3
+    Path: "/usr/local/next-terminal/data/recordings"
+  Guacd:
+    Drive: "/usr/local/next-terminal/data/drive"
+    Hosts:
+      - Hostname: guacd
+        Port: 4822
+        Weight: 1
   # 反向代理配置，详情参考 https://docs.next-terminal.typesafe.cn/install/config-desc.html
-  ReverseProxy: 
+  ReverseProxy:
     Enabled: false # 是否启用反向代理
     HttpEnabled: true # 是否启用 http 反向代理
     HttpAddr: ":80" # http 监听地址
@@ -38,5 +41,3 @@ app:
     IpExtractor: "direct" # ip 提取方式，可选 direct, x-forwarded-for, x-real-ip
     IpTrustList: # 信任的IP地址列表
       - "0.0.0.0/0"
-  Website:
-    AccessLog: "./logs/access.log"
