@@ -39,58 +39,54 @@ jobs:
       - name: 比较配置文件
         id: compare-config
         run: |
-          CONFIG_FILES=("sql/config.yaml")
-          REMOTE_URLS=("https://f.typesafe.cn/next-terminal/config.yaml")
-          SKIP_BUILD=false
-
-          for i in "${!CONFIG_FILES[@]}"; do
-            LOCAL_FILE=${CONFIG_FILES[$i]}
-            REMOTE_FILE=$(curl -s ${REMOTE_URLS[$i]})
-            LOCAL_CONTENT=$(cat $LOCAL_FILE)
-
-            if [ "$LOCAL_CONTENT" != "$REMOTE_FILE" ]; then
-              echo "配置文件 ${LOCAL_FILE} 与远程文件不匹配，跳过构建。"
-              SKIP_BUILD=true
-              break
-            fi
-          done
-
-          if [ "$SKIP_BUILD" = true ]; then
+          LOCAL_FILE="sql/config.yaml"
+          REMOTE_URL="https://f.typesafe.cn/next-terminal/config.yaml"
+          
+          curl -s $REMOTE_URL -o remote_config.yaml
+          
+          if diff -qZ "$LOCAL_FILE" remote_config.yaml > /dev/null; then
+            echo "配置文件与远程一致，验证通过。"
+            echo "::set-output name=skip_build::false"
+          else
+            echo "配置文件与远程不匹配（官方可能已更新），为了安全跳过构建。"
             echo "::set-output name=skip_build::true"
           fi
 
-      - name: 构建并推送 Docker 镜像（latest、带版本号、带版本号和时间戳）
+      - name: 构建并推送 Docker 镜像
         if: steps.fetch-version.outputs.skip_build != 'true' && steps.compare-config.outputs.skip_build != 'true'
         run: |
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          docker buildx build --platform linux/amd64,linux/arm64 -t aaronlee/next-terminal:latest --push .
-          docker buildx build --platform linux/amd64,linux/arm64 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }} --push .
-          docker buildx build --platform linux/amd64,linux/arm64 -t aaronlee/next-terminal:${{ steps.fetch-version.outputs.latest_version }}-${TIMESTAMP} --push .
+          REPO="aaronlee/next-terminal"
+          
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            -t ${REPO}:latest \
+            -t ${REPO}:${LATEST_VERSION} \
+            -t ${REPO}:${LATEST_VERSION}-${TIMESTAMP} \
+            --push .
 
-      - name: 更新版本文件并推送到 GitHub
-        if: steps.fetch-version.outputs.skip_build != 'true' && steps.compare-config.outputs.skip_build != 'true'
+      - name: 更新仓库文件 (Version & Time) 并推送到 GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
-          echo $LATEST_VERSION > version
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add version
+          
+          # 1. 只有在构建成功后才更新版本号
+          if [ "${{ steps.fetch-version.outputs.skip_build }}" != "true" ] && [ "${{ steps.compare-config.outputs.skip_build }}" != "true" ]; then
+            LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
+            echo $LATEST_VERSION > version
+            git add version
+            COMMIT_MSG="版本更新为 $LATEST_VERSION"
+          else
+            COMMIT_MSG="运行记录更新"
+          fi
+          
+          # 2. 无论是否构建，都更新运行时间
           current_time=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M:%S")
-          git commit -m "版本更新为 $LATEST_VERSION - 北京时间: $current_time"
-          git push origin main
-
-      - name: 写入时间到文件
-        run: echo $(date +"%Y-%m-%d %H:%M:%S") > time
-
-      - name: 提交和推送时间更改
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          echo "$current_time" > time
           git add time
-          current_time=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M:%S")
-          git commit -m "运行时间 - 北京时间: $current_time"
+          
+          # 3. 提交并推送
+          git commit -m "$COMMIT_MSG - 北京时间: $current_time"
           git push origin main
-
