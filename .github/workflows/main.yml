@@ -24,69 +24,81 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 获取最新版本
+      - name: 获取最新版本并验证镜像标签
         id: fetch-version
         run: |
+          # 获取 GitHub 最新 Release 标签 (带 v)
           LATEST_VERSION=$(curl -s https://api.github.com/repos/dushixiang/next-terminal/releases/latest | jq -r '.tag_name')
-          CURRENT_VERSION=$(cat version)
+          CURRENT_VERSION=$(cat version 2>/dev/null || echo "none")
+          
           if [ "$LATEST_VERSION" = "$CURRENT_VERSION" ]; then
-            echo "版本匹配，跳过构建。"
+            echo "版本匹配 ($LATEST_VERSION)，跳过构建。"
             echo "::set-output name=skip_build::true"
           else
+            echo "检测到新版本: $LATEST_VERSION"
+            
+            # 检查 Docker Hub 上是否存在带 v 的具体标签
+            if docker manifest inspect dushixiang/next-terminal:${LATEST_VERSION} > /dev/null 2>&1; then
+              echo "Docker Hub 镜像已就绪: ${LATEST_VERSION}"
+              echo "::set-output name=use_tag::${LATEST_VERSION}"
+            else
+              echo "Docker Hub 具体标签尚未同步，回退使用 latest"
+              echo "::set-output name=use_tag::latest"
+            fi
+            
             echo "::set-output name=latest_version::$LATEST_VERSION"
+            echo "::set-output name=skip_build::false"
           fi
 
       - name: 比较配置文件
         id: compare-config
+        if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LOCAL_FILE="sql/config.yaml"
           REMOTE_URL="https://f.typesafe.cn/next-terminal/config.yaml"
-          
           curl -s $REMOTE_URL -o remote_config.yaml
           
           if diff -qZ "$LOCAL_FILE" remote_config.yaml > /dev/null; then
-            echo "配置文件与远程一致，验证通过。"
+            echo "配置文件验证通过。"
             echo "::set-output name=skip_build::false"
           else
-            echo "配置文件与远程不匹配（官方可能已更新），为了安全跳过构建。"
+            echo "配置文件已变更，为了安全跳过自动构建。"
             echo "::set-output name=skip_build::true"
           fi
 
       - name: 构建并推送 Docker 镜像
-        if: steps.fetch-version.outputs.skip_build != 'true' && steps.compare-config.outputs.skip_build != 'true'
+        if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
+          FINAL_TAG=${{ steps.fetch-version.outputs.use_tag }}
           LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           REPO="aaronlee/next-terminal"
           
           docker buildx build --platform linux/amd64,linux/arm64 \
+            --build-arg NT_VERSION=${FINAL_TAG} \
             -t ${REPO}:latest \
             -t ${REPO}:${LATEST_VERSION} \
             -t ${REPO}:${LATEST_VERSION}-${TIMESTAMP} \
             --push .
 
-      - name: 更新仓库文件 (Version & Time) 并推送到 GitHub
+      - name: 更新仓库状态文件并推送
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
           
-          # 1. 只有在构建成功后才更新版本号
-          if [ "${{ steps.fetch-version.outputs.skip_build }}" != "true" ] && [ "${{ steps.compare-config.outputs.skip_build }}" != "true" ]; then
-            LATEST_VERSION=${{ steps.fetch-version.outputs.latest_version }}
-            echo $LATEST_VERSION > version
+          if [ "${{ steps.fetch-version.outputs.skip_build }}" != "true" ]; then
+            echo "${{ steps.fetch-version.outputs.latest_version }}" > version
             git add version
-            COMMIT_MSG="版本更新为 $LATEST_VERSION"
+            COMMIT_MSG="版本更新为 ${{ steps.fetch-version.outputs.latest_version }}"
           else
-            COMMIT_MSG="运行记录更新"
+            COMMIT_MSG="日常运行记录更新"
           fi
           
-          # 2. 无论是否构建，都更新运行时间
           current_time=$(TZ='Asia/Shanghai' date "+%Y-%m-%d %H:%M:%S")
           echo "$current_time" > time
           git add time
           
-          # 3. 提交并推送
           git commit -m "$COMMIT_MSG - 北京时间: $current_time"
           git push origin main
