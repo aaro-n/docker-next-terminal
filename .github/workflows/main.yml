@@ -31,7 +31,7 @@ jobs:
         run: |
           # 使用 Token 认证调用 API，防止返回 null
           LATEST_VERSION=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/dushixiang/next-terminal/releases/latest | jq -r '.tag_name')
+            https://api.github.com/repos/next-terminal/next-terminal/releases/latest | jq -r '.tag_name')
           
           # 安全检查：防止 API 故障
           if [ "$LATEST_VERSION" = "null" ] || [ -z "$LATEST_VERSION" ]; then
