@@ -65,7 +65,7 @@ jobs:
         if: steps.fetch-version.outputs.skip_build != 'true'
         run: |
           LOCAL_FILE="sql/config.yaml"
-          REMOTE_URL="https://f.typesafe.cn/next-terminal/config.yaml"
+          REMOTE_URL="https://f.next-terminal.com/next-terminal/config.yaml"
           curl -s $REMOTE_URL -o remote_config.yaml
           
           if diff -qZ "$LOCAL_FILE" remote_config.yaml > /dev/null; then
